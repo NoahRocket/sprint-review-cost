@@ -11,6 +11,7 @@ function startTimer() {
     
     const attendees = parseInt(document.getElementById('attendees').value);
     const hours = parseFloat(document.getElementById('hours').value);
+    const hourlyRate = 100; // Fixed hourly rate
     
     if (!attendees || !hours) {
         alert('Please enter both attendees and hours');
@@ -22,7 +23,7 @@ function startTimer() {
     const initialSeconds = totalSeconds;
     
     // Calculate cost per second
-    costPerSecond = (100 * attendees) / 3600;
+    costPerSecond = (hourlyRate * attendees) / 3600;
     
     let currentCost = 0;
     const costElement = document.getElementById('cost');
@@ -49,14 +50,34 @@ function startTimer() {
     function drawMoneyPit(burnProgress) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Draw money pile (stacked bills effect)
+        // Draw money pile (stacked bills effect with details)
         const moneyHeight = 150 * (1 - burnProgress);
         for (let i = 0; i < 5; i++) {
             const offset = i * 10;
+            const billHeight = moneyHeight / 5;
+            const yPos = 50 + (150 - moneyHeight);
+
+            // Draw each bill layer
             ctx.fillStyle = burnProgress > 0.8 ? '#555' : `hsl(120, 50%, ${50 - i * 5}%)`;
-            ctx.fillRect(50 + offset, 50 + (150 - moneyHeight), 200 - offset * 2, moneyHeight);
+            ctx.fillRect(50 + offset, yPos, 200 - offset * 2, moneyHeight);
             ctx.strokeStyle = '#000';
-            ctx.strokeRect(50 + offset, 50 + (150 - moneyHeight), 200 - offset * 2, moneyHeight);
+            ctx.strokeRect(50 + offset, yPos, 200 - offset * 2, moneyHeight);
+
+            // Add bill details (dollar signs and lines)
+            if (burnProgress < 0.8) {
+                ctx.fillStyle = '#000';
+                ctx.font = '12px Arial';
+                for (let j = 0; j < Math.floor(moneyHeight / 20); j++) {
+                    const billY = yPos + j * 20 + 10;
+                    ctx.fillText('$', 60 + offset, billY);
+                    ctx.fillText('$', 230 - offset, billY);
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                    ctx.beginPath();
+                    ctx.moveTo(50 + offset, billY - 5);
+                    ctx.lineTo(250 - offset, billY - 5);
+                    ctx.stroke();
+                }
+            }
         }
 
         // Generate particles (flames and smoke)
@@ -112,3 +133,16 @@ function startTimer() {
     }
     animate();
 }
+
+// Check for URL parameters and auto-start timer if present
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const attendees = urlParams.get('attendees');
+    const hours = urlParams.get('hours');
+
+    if (attendees && hours) {
+        document.getElementById('attendees').value = attendees;
+        document.getElementById('hours').value = hours;
+        startTimer();
+    }
+};
